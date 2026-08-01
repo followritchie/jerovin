@@ -42,7 +42,7 @@ function fmtEST(iso: string){ try { return new Date(iso).toLocaleString("en-US",
 function fmtLocal(iso: string, tz: string){ try { return new Date(iso).toLocaleString("en-US",{timeZone:tz,dateStyle:"medium",timeStyle:"short"})+" ("+tz+")"; } catch { return iso; } }
 
 export default function MediaLibrary() {
-  const [files, setFiles] = useState([]);
+  const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState({done:0,total:0});
