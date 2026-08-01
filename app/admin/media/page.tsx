@@ -49,7 +49,7 @@ export default function MediaLibrary() {
   const [allCopied, setAllCopied] = useState(false);
   const [cat, setCat] = useState("all");
   const [userTZ, setUserTZ] = useState("UTC");
-  const fileRef = useRef(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setUserTZ(Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -58,7 +58,7 @@ export default function MediaLibrary() {
     }).catch(()=>{}).finally(()=>setLoading(false));
   }, []);
 
-  const uploadFiles = async (fileList) => {
+  const uploadFiles = async (fileList: File[]) => {
     if (!fileList.length) return;
     setUploading(true); setProgress({done:0,total:fileList.length});
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -95,7 +95,7 @@ export default function MediaLibrary() {
     if (ids.length) await fetch("/api/media",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({ids})});
     setFiles(prev=>prev.filter(f=>!f.selected));
   };
-  const copyUrl = (url) => {
+  const copyUrl = (url: string) => {
     navigator.clipboard.writeText(url);
     setFiles(prev=>prev.map(f=>f.url===url?{...f,copied:true}:f));
     setTimeout(()=>setFiles(prev=>prev.map(f=>f.url===url?{...f,copied:false}:f)),2000);

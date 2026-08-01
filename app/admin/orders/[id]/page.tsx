@@ -11,21 +11,21 @@ function fmtUSD(n){return"$"+((n||0)*USD).toFixed(2);}
 export default function OrderDetailPage({ params }) {
   const { id } = use(params);
   const router = useRouter();
-  const [order, setOrder] = useState(null);
+  const [order, setOrder] = useState<any>(null);
   const [history, setHistory] = useState({orders:[],reviews:[]});
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState<string|null>(null);
   const [courier, setCourier] = useState("");
   const [trackingNum, setTrackingNum] = useState("");
   const [showShare, setShowShare] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
-  const [shareFields, setShareFields] = useState({
+  const [shareFields, setShareFields] = useState<Record<string,boolean>>({
     orderNumber: true, firstName: false, lastName: false, email: false, phone: false,
     address: false, productName: true, size: true, color: true, measurements: true,
     instructions: true, images: true,
   });
 
-  const getAddr = (o) => { try { return typeof o.shipping_address==="string"?JSON.parse(o.shipping_address):o.shipping_address||{}; } catch { return {}; } };
+  const getAddr = (o: any) => { try { return typeof o.shipping_address==="string"?JSON.parse(o.shipping_address):o.shipping_address||{}; } catch { return {}; } };
 
   const load = () => {
     setLoading(true);
@@ -43,7 +43,7 @@ export default function OrderDetailPage({ params }) {
 
   useEffect(()=>{ load(); },[id]);
 
-  const updateStatus = async (status) => {
+  const updateStatus = async (status: string) => {
     await fetch("/api/orders",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId:id,status})});
     setToast("Status updated to " + status.toUpperCase());
     setTimeout(()=>setToast(null),3000);
