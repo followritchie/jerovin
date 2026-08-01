@@ -3,82 +3,113 @@ import { db } from "@/app/lib/db";
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const customerId = searchParams.get("customerId");
-    const orderId = searchParams.get("id");
+    const email = req.nextUrl.searchParams.get("email");
+    const phone = req.nextUrl.searchParams.get("phone");
 
-    if (orderId) {
-      const result = await db.query(
-        `SELECT o.*, 
-        json_agg(json_build_object(
-          'id', oi.id, 'product_id', oi.product_id, 'quantity', oi.quantity,
-          'price_inr', oi.price_inr, 'custom_message', oi.custom_message,
-          'name', p.name
-        )) as items
-        FROM orders o
-        LEFT JOIN order_items oi ON oi.order_id = o.id
-        LEFT JOIN products p ON p.id = oi.product_id
-        WHERE o.id = $1 GROUP BY o.id`,
-        [orderId]
-      );
-      return NextResponse.json(result.rows[0] || null);
+    if (!email && !phone) {
+      return NextResponse.json([], { status: 400 });
     }
 
-    if (customerId) {
-      const result = await db.query(
-        "SELECT * FROM orders WHERE customer_id=$1 ORDER BY created_at DESC",
-        [customerId]
-      );
-      return NextResponse.json(result.rows);
+    let query = `
+      SELECT id, order_number, total_inr, shipping_inr, tax_inr, status,
+             payment_method, payment_status, tracking_number, courier,
+             shipping_address, created_at
+      FROM orders
+      WHERE 1=1
+    `;
+    const params: string[] = [];
+
+    if (email) {
+      params.push(email);
+      query += ` AND (shipping_address::text ILIKE '%' || $${params.length} || '%')`;
+    }
+    if (phone) {
+      params.push(phone);
+      query += ` AND (shipping_address::text ILIKE '%' || $${params.length} || '%')`;
     }
 
-    const result = await db.query(
-      "SELECT o.*, c.name as customer_name, c.email as customer_email FROM orders o LEFT JOIN customers c ON c.id = o.customer_id ORDER BY o.created_at DESC"
-    );
+    query += ` ORDER BY created_at DESC LIMIT 100`;
+
+    const result = await db.query(query, params);
     return NextResponse.json(result.rows);
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });
+  } catch (error: any) {
+    console.error("GET orders error:", error.message);
+    return NextResponse.json([], { status: 500 });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { customerId, items, shippingAddress, subtotal, shipping, tax, total, currency, currencyRate, paymentMethod } = body;
+    const {
+      items, shippingAddress, subtotal, shipping, tax, total,
+      currency, currencyRate, paymentMethod
+    } = body;
 
-    const orderNumber = "JRV" + Date.now();
-
-    const orderResult = await db.query(
-      `INSERT INTO orders (order_number, customer_id, status, subtotal_inr, shipping_inr, tax_inr, total_inr, currency, currency_rate, payment_method, payment_status, shipping_address, created_at)
-      VALUES ($1,$2,'pending',$3,$4,$5,$6,$7,$8,$9,'pending',$10,NOW()) RETURNING id`,
-      [orderNumber, customerId || null, subtotal, shipping, tax, total, currency || "INR", currencyRate || 1, paymentMethod || "online", JSON.stringify(shippingAddress)]
-    );
-
-    const orderId = orderResult.rows[0].id;
-
-    for (const item of items) {
-      await db.query(
-        `INSERT INTO order_items (order_id, product_id, quantity, price_inr, custom_color, custom_size, custom_message, reference_image_url)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-        [orderId, item.productId, item.quantity, item.price, item.customColor || null, item.customSize || null, item.customMessage || null, item.referenceImageUrl || null]
-      );
+    if (!items || !shippingAddress) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, orderId, orderNumber });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
+    const orderNumber = "JRV" + Date.now() + Math.floor(Math.random() * 1000);
+
+    const result = await db.query(
+      `INSERT INTO orders (
+        order_number, shipping_address, subtotal_inr, shipping_inr, tax_inr, total_inr,
+        currency, currency_rate, payment_method, payment_status, status, created_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending','pending',NOW()) RETURNING id, order_number`,
+      [
+        orderNumber,
+        JSON.stringify(shippingAddress),
+        subtotal, shipping, tax, total,
+        currency || "INR",
+        currencyRate || 1,
+        paymentMethod || "razorpay"
+      ]
+    );
+
+    const orderId = result.rows[0].id;
+    const orderNum = result.rows[0].order_number;
+
+    if (items && items.length > 0) {
+      for (const item of items) {
+        try {
+          await db.query(
+            `INSERT INTO order_items (order_id, product_id, quantity, price_inr, created_at)
+             VALUES ($1,$2,$3,$4,NOW())`,
+            [orderId, item.productId, item.quantity, item.price]
+          );
+        } catch (itemErr: any) {
+          console.error("Order item insert error:", itemErr.message);
+        }
+      }
+    }
+
+    return NextResponse.json({ success: true, orderId, orderNumber: orderNum });
+  } catch (error: any) {
+    console.error("POST orders error:", error.message);
+    return NextResponse.json({ error: "Failed to create order", details: error.message }, { status: 500 });
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { orderId, status, trackingNumber, courier } = await req.json();
+    const { orderId, status, trackingNumber, courier, paymentId } = await req.json();
+    if (!orderId) return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
+
     await db.query(
-      "UPDATE orders SET status=$1, tracking_number=$2, courier=$3, updated_at=NOW() WHERE id=$4",
-      [status, trackingNumber || null, courier || null, orderId]
+      `UPDATE orders SET
+        status = COALESCE($1, status),
+        tracking_number = COALESCE($2, tracking_number),
+        courier = COALESCE($3, courier),
+        payment_id = COALESCE($4, payment_id),
+        updated_at = NOW()
+      WHERE id = $5`,
+      [status || null, trackingNumber || null, courier || null, paymentId || null, orderId]
     );
+
     return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
+  } catch (error: any) {
+    console.error("PATCH orders error:", error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

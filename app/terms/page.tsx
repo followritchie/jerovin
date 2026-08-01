@@ -1,3 +1,5 @@
+import Nav from "../components/Nav";
+
 export default function TermsPage() {
   return (
     <main className="min-h-screen bg-black text-white pb-16 lg:pb-0">

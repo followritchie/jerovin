@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
 import Nav from "../components/Nav";
+import { useState } from "react";
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });

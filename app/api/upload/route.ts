@@ -1,37 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
-import ImageKit from "imagekit";
-
-const imagekit = new ImageKit({
-  urlEndpoint: "https://ik.imagekit.io/jerovin",
-  publicKey: "public_kcQnpwQy6vpG/dyGG+JdVaFuYTY=",
-  privateKey: "private_zBHInQKJwQX9lhGdvgcnON29kxE=",
-});
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const fileName = formData.get("fileName") as string;
-    const folder = formData.get("folder") as string || "products";
+    if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const base64 = buffer.toString("base64");
+    const isVideo = file.type.startsWith("video/");
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
 
-    const result = await imagekit.upload({
-      file: base64,
-      fileName: fileName,
-      folder: folder,
-      useUniqueFileName: true,
-      tags: ["jerovin", "product"],
+    if (!cloudName || !uploadPreset) {
+      return NextResponse.json({ error: "Cloudinary not configured" }, { status: 500 });
+    }
+
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("upload_preset", uploadPreset);
+    fd.append("folder", "jerovin/products");
+
+    const resourceType = isVideo ? "video" : "image";
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`, {
+      method: "POST",
+      body: fd,
     });
 
-    return NextResponse.json({
-      url: result.url,
-      fileId: result.fileId,
-      name: result.name,
-      thumbnailUrl: result.thumbnailUrl,
-    });
-  } catch (error) {
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    const data = await res.json();
+    if (!data.secure_url) {
+      return NextResponse.json({ error: data.error?.message || "Upload failed" }, { status: 500 });
+    }
+
+    return NextResponse.json({ url: data.secure_url, type: resourceType });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

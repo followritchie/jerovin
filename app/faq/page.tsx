@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
 import Nav from "../components/Nav";
+import { useState } from "react";
 
 export default function FAQPage() {
   const [open, setOpen] = useState<number | null>(null);

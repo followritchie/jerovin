@@ -1,0 +1,20 @@
+INSERT INTO categories (name, slug, description, parent_id) VALUES
+('Sarees', 'women-sarees', 'All types of sarees', (SELECT id FROM categories WHERE slug='women')),
+('Lehengas', 'women-lehengas', 'Bridal and party lehengas', (SELECT id FROM categories WHERE slug='women')),
+('Blouses', 'women-blouses', 'Custom and designer blouses', (SELECT id FROM categories WHERE slug='women')),
+('Designer Kurta Sets', 'women-kurta-sets', 'Designer kurta sets', (SELECT id FROM categories WHERE slug='women')),
+('Designer Sarees', 'women-sarees-designer', 'Designer sarees', (SELECT id FROM categories WHERE slug='women-sarees')),
+('Uppada Silk Sarees', 'women-sarees-uppada', 'Uppada silk sarees', (SELECT id FROM categories WHERE slug='women-sarees')),
+('Kanjivaram Silk Sarees', 'women-sarees-kanjivaram', 'Kanjivaram silk sarees', (SELECT id FROM categories WHERE slug='women-sarees')),
+('Sherwanis', 'men-sherwanis', 'Wedding sherwanis', (SELECT id FROM categories WHERE slug='men')),
+('Kurtas', 'men-kurtas', 'Casual and formal kurtas', (SELECT id FROM categories WHERE slug='men')),
+('Blazers', 'men-blazers', 'Blazers and jackets', (SELECT id FROM categories WHERE slug='men')),
+('Indo Western', 'men-indo-western', 'Indo western fusion', (SELECT id FROM categories WHERE slug='men')),
+('Boys', 'kids-boys', 'Boys clothing', (SELECT id FROM categories WHERE slug='kids')),
+('Girls', 'kids-girls', 'Girls clothing', (SELECT id FROM categories WHERE slug='kids')),
+('Rings', 'jewellery-rings', 'Rings', (SELECT id FROM categories WHERE slug='jewellery')),
+('Earrings', 'jewellery-earrings', 'Earrings', (SELECT id FROM categories WHERE slug='jewellery')),
+('Pendants', 'jewellery-pendants', 'Pendants and necklaces', (SELECT id FROM categories WHERE slug='jewellery')),
+('Clips', 'jewellery-clips', 'Hair clips and accessories', (SELECT id FROM categories WHERE slug='jewellery')),
+('Handicrafts', 'handicrafts', 'Authentic Indian handicrafts', NULL)
+ON CONFLICT DO NOTHING;

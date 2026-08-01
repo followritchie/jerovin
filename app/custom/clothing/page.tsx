@@ -2,6 +2,8 @@
 import { useState } from "react";
 import Price from "../../components/Price";
 
+import Nav from "../../components/Nav";
+
 export default function CustomClothingPage() {
   const [selectedType, setSelectedType] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
@@ -24,14 +26,8 @@ export default function CustomClothingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      <nav className="flex items-center justify-between px-6 md:px-10 py-5 border-b border-gray-800">
-        <a href="/" className="text-xl md:text-2xl font-bold tracking-widest text-white no-underline">JEROVIN</a>
-        <div className="flex gap-4 text-xs tracking-widest text-gray-400">
-          <a href="/cart" className="hover:text-white transition">CART</a>
-          <a href="/account" className="hover:text-white transition">ACCOUNT</a>
-        </div>
-      </nav>
+    <main className="min-h-screen bg-black text-white pb-16 lg:pb-0">
+      <Nav/>
 
       <div className="px-6 md:px-10 py-4 text-xs tracking-widest text-gray-500">
         <a href="/" className="hover:text-white transition">HOME</a>
