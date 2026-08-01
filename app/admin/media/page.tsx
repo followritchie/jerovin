@@ -38,8 +38,8 @@ const NAV = [
   {id:"audit",label:"Audit Log",icon:ShieldCheck,href:"/admin#audit"},
 ];
 
-function fmtEST(iso){ try { return new Date(iso).toLocaleString("en-US",{timeZone:"America/New_York",dateStyle:"medium",timeStyle:"short"})+" EST"; } catch { return ""; } }
-function fmtLocal(iso,tz){ try { return new Date(iso).toLocaleString("en-US",{timeZone:tz,dateStyle:"medium",timeStyle:"short"})+" ("+tz+")"; } catch { return iso; } }
+function fmtEST(iso: string){ try { return new Date(iso).toLocaleString("en-US",{timeZone:"America/New_York",dateStyle:"medium",timeStyle:"short"})+" EST"; } catch { return ""; } }
+function fmtLocal(iso: string, tz: string){ try { return new Date(iso).toLocaleString("en-US",{timeZone:tz,dateStyle:"medium",timeStyle:"short"})+" ("+tz+")"; } catch { return iso; } }
 
 export default function MediaLibrary() {
   const [files, setFiles] = useState([]);
