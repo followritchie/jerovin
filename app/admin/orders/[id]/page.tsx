@@ -8,7 +8,7 @@ const USD = 0.012;
 function fmt(n){return"₹"+(n||0).toLocaleString("en-IN");}
 function fmtUSD(n){return"$"+((n||0)*USD).toFixed(2);}
 
-export default function OrderDetailPage({ params }) {
+export default function OrderDetailPage({ params }: { params: any }) {
   const { id } = use(params);
   const router = useRouter();
   const [order, setOrder] = useState<any>(null);
