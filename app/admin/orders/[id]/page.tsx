@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Truck, Package, MapPin, CreditCard, X, Check, Star, History } from "lucide-react";
 
@@ -8,8 +8,8 @@ const USD = 0.012;
 function fmt(n){return"₹"+(n||0).toLocaleString("en-IN");}
 function fmtUSD(n){return"$"+((n||0)*USD).toFixed(2);}
 
-export default function OrderDetailPage({ params }: { params: any }) {
-  const { id } = use(params);
+export default function OrderDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const router = useRouter();
   const [order, setOrder] = useState<any>(null);
   const [history, setHistory] = useState({orders:[],reviews:[]});
