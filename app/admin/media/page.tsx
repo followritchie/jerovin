@@ -212,7 +212,7 @@ export default function MediaLibrary() {
                     <div key={i} className={"bg-white border rounded-xl overflow-hidden transition "+(file.selected?"border-gray-900":"border-gray-100")}>
                       <div className="relative aspect-square bg-gray-50 cursor-pointer" onClick={()=>toggleSelect(file.url)}>
                         {file.type==="video"
-                          ? <video src={file.url} className="absolute inset-0 w-full h-full object-cover" muted playsInline onMouseEnter={e=>e.target.play().catch(()=>{})} onMouseLeave={e=>{e.target.pause();e.target.currentTime=0;}}/>
+                          ? <video src={file.url} className="absolute inset-0 w-full h-full object-cover" muted playsInline onMouseEnter={e=>(e.target as HTMLVideoElement).play().catch(()=>{})} onMouseLeave={e=>{(e.target as HTMLVideoElement).pause();(e.target as HTMLVideoElement).currentTime=0;}}/>
                           : <img src={file.url} alt={file.name} className="absolute inset-0 w-full h-full object-cover"/>
                         }
                         <div className={"absolute top-2 left-2 w-5 h-5 rounded-md border-2 flex items-center justify-center transition "+(file.selected?"bg-gray-900 border-gray-900":"border-white bg-white/70")}>
